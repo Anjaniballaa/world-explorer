@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 export default function WeatherPanel({ lat, lon, city }) {
@@ -7,7 +8,7 @@ export default function WeatherPanel({ lat, lon, city }) {
   useEffect(() => {
     if (!lat || !lon) return;
     setLoading(true);
-    fetch(`http://localhost:5000/api/weather?lat=${lat}&lon=${lon}`)
+    fetch(`${API}/weather?lat=${lat}&lon=${lon}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
