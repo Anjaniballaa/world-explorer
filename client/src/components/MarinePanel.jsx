@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 export default function MarinePanel({ lat, lon }) {
@@ -9,7 +10,7 @@ export default function MarinePanel({ lat, lon }) {
     if (!lat || !lon) return;
     setLoading(true);
     setError(false);
-    fetch(`http://localhost:5000/api/marine?lat=${lat}&lon=${lon}`)
+    fetch(`${API}/marine?lat=${lat}&lon=${lon}`)
       .then(r => r.json())
       .then(d => {
         if (d.error || d.reason) { setError(true); setLoading(false); return; }
