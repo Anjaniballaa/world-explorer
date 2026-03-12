@@ -1,8 +1,6 @@
 import API from "../config";
 import { useState, useEffect } from "react";
 
-// India has 22 scheduled languages - only show primary regional one as "official for region"
-// All 22 are constitutionally scheduled but not all are spoken everywhere
 const INDIA_REGIONAL = {
   "Andhra Pradesh": "Telugu", "Telangana": "Telugu",
   "Tamil Nadu": "Tamil", "Karnataka": "Kannada",
@@ -17,9 +15,9 @@ const INDIA_REGIONAL = {
 };
 
 export default function LanguagePanel({ location, country }) {
-  const [data, setData] = useState(null);
+  const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error,   setError]   = useState(false);
 
   useEffect(() => {
     if (!location?.lat || !location?.lon) return;
@@ -47,36 +45,31 @@ export default function LanguagePanel({ location, country }) {
     </div>
   );
 
-  const primary = data.primaryLanguage;
-  const regional = data.regionalLanguage;
-  const langWiki = data.languageWiki;
+  const primary      = data.primaryLanguage;
+  const regional     = data.regionalLanguage;
+  const langWiki     = data.languageWiki;
   const nativeScript = data.nativeScript;
-  const cityWiki = data.cityWiki;
-  const stateWiki = data.stateWiki;
+  const cityWiki     = data.cityWiki;
+  const stateWiki    = data.stateWiki;
 
-  // For India: only show the state's regional language as primary, not all 22 scheduled
   const stateRegionalLang = INDIA_REGIONAL[data.state] || primary;
-  const displayPrimary = data.country === "India" ? stateRegionalLang : primary;
+  const displayPrimary    = data.country === "India" ? stateRegionalLang : primary;
 
-  // Filter official languages - for India show only 2 (Hindi + English as link languages)
-  // and separately show the regional language
   let officialToShow = data.officialLanguages || [];
-  let scheduledNote = null;
+  let scheduledNote  = null;
   if (data.country === "India" && officialToShow.length > 3) {
     officialToShow = [{ code: "hin", name: "Hindi" }, { code: "eng", name: "English" }];
-    scheduledNote = "India has 22 constitutionally scheduled languages";
+    scheduledNote  = "India has 22 constitutionally scheduled languages";
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-      {/* CITY SECTION */}
+      {/* CITY */}
       <div className="card">
         <div className="card-title" style={{ color: "var(--purple)" }}>
           🏙️ City — {data.city}
         </div>
-
-        {/* City Wikipedia */}
         {cityWiki?.extract && (
           <div style={{ marginBottom: 16 }}>
             {cityWiki.thumbnail && (
@@ -94,12 +87,10 @@ export default function LanguagePanel({ location, country }) {
             )}
           </div>
         )}
-
-        {/* City name in native language */}
         {nativeScript?.nativeCityName && (
           <div style={{
             background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)",
-            borderRadius: 8, padding: "12px 16px", marginTop: 8
+            borderRadius: 8, padding: "12px 16px", marginTop: 8,
           }}>
             <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginBottom: 4 }}>
               {data.city} written in {displayPrimary}:
@@ -116,16 +107,14 @@ export default function LanguagePanel({ location, country }) {
         )}
       </div>
 
-      {/* STATE SECTION */}
+      {/* STATE */}
       <div className="card">
         <div className="card-title" style={{ color: "var(--teal)" }}>
           🗺️ State / Region — {data.state}
         </div>
-
-        {/* Primary regional language */}
         <div style={{
           background: "rgba(0,212,255,0.06)", border: "1px solid rgba(0,212,255,0.2)",
-          borderRadius: 10, padding: 16, marginBottom: 16
+          borderRadius: 10, padding: 16, marginBottom: 16,
         }}>
           <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginBottom: 6, fontFamily: "var(--font-head)", letterSpacing: 1 }}>
             PRIMARY LANGUAGE OF {data.state?.toUpperCase()}
@@ -134,26 +123,28 @@ export default function LanguagePanel({ location, country }) {
             {displayPrimary}
           </div>
           <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-            📡 Detected from: {regional?.source === "wikipedia-city" ? `${data.city} Wikipedia page` : regional?.source === "wikipedia-state" ? `${data.state} Wikipedia page` : "RestCountries API"}
+            📡 Detected from: {regional?.source === "wikipedia-city"
+              ? `${data.city} Wikipedia page`
+              : regional?.source === "wikipedia-state"
+              ? `${data.state} Wikipedia page`
+              : "RestCountries API"}
           </div>
-
-          {/* Other languages mentioned in region */}
           {regional?.allMentioned?.length > 1 && (
             <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginBottom: 6 }}>Also mentioned in {data.state}:</div>
+              <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginBottom: 6 }}>
+                Also mentioned in {data.state}:
+              </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {regional.allMentioned.filter(l => l !== displayPrimary).map((l, i) => (
                   <span key={i} style={{
                     background: "rgba(0,212,255,0.08)", border: "1px solid rgba(0,212,255,0.15)",
-                    borderRadius: 12, padding: "3px 10px", fontSize: "0.75rem", color: "var(--teal)"
+                    borderRadius: 12, padding: "3px 10px", fontSize: "0.75rem", color: "var(--teal)",
                   }}>{l}</span>
                 ))}
               </div>
             </div>
           )}
         </div>
-
-        {/* State Wikipedia */}
         {stateWiki?.extract && (
           <div>
             <p style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6 }}>
@@ -169,13 +160,11 @@ export default function LanguagePanel({ location, country }) {
         )}
       </div>
 
-      {/* COUNTRY LANGUAGES SECTION */}
+      {/* COUNTRY */}
       <div className="card">
         <div className="card-title" style={{ color: "var(--gold)" }}>
           🌍 Country Languages — {data.country}
         </div>
-
-        {/* Official link languages */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginBottom: 8, fontFamily: "var(--font-head)", letterSpacing: 1 }}>
             OFFICIAL / LINK LANGUAGES
@@ -193,12 +182,11 @@ export default function LanguagePanel({ location, country }) {
           </div>
           {scheduledNote && (
             <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 8 }}>
-              ℹ️ {scheduledNote} — regional language for this area is <strong style={{ color: "var(--teal)" }}>{displayPrimary}</strong>
+              ℹ️ {scheduledNote} — regional language for this area is{" "}
+              <strong style={{ color: "var(--teal)" }}>{displayPrimary}</strong>
             </div>
           )}
         </div>
-
-        {/* Language Wikipedia */}
         {langWiki?.extract && (
           <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
             <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginBottom: 8, fontFamily: "var(--font-head)", letterSpacing: 1 }}>
