@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import API from "./config";
+import { detectLocation } from "./hooks/useLocation";
 import Header            from "./components/Header";
 import InteractiveMap    from "./components/InteractiveMap";
 import CountryCard       from "./components/CountryCard";
@@ -37,12 +38,12 @@ export default function App() {
   useEffect(() => {
     const detect = async () => {
       try {
-        const res  = await fetch(`${API}/location`);
-        const data = await res.json();
+        // Detect location CLIENT-SIDE — always gets user's real IP, not server's
+        const data = await detectLocation();
         setLocation({
           city:        data.city,
           country:     data.country,
-          countryCode: data.countryCode?.toLowerCase(),
+          countryCode: data.countryCode,
           lat:         data.lat,
           lon:         data.lon,
           timezone:    data.timezone,
@@ -57,25 +58,34 @@ export default function App() {
   }, [fetchCountry]);
 
   const handleCountrySelect = useCallback(async (countryName, lat, lon, overrides = {}) => {
-    setLoading(true);
     try {
       const res  = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=true`);
       const data = await res.json();
-      const c    = data[0];
-      if (!c) return;
+      const c    = data?.[0];
+      if (!c) {
+        // Even if country lookup fails, still update location with what we have
+        if (lat && lon) {
+          setLocation(prev => ({
+            ...prev,
+            city:    overrides.overrideCity || countryName,
+            country: countryName,
+            lat, lon,
+          }));
+        }
+        return;
+      }
       setCountry(c);
       setLocation({
         city:        overrides.overrideCity || c.capital?.[0] || countryName,
         country:     c.name.common,
-        countryCode: overrides.countryCode  || c.cca2?.toLowerCase() || "us",
+        countryCode: overrides.countryCode  || c.cca2?.toLowerCase() || "in",
         lat:         lat  || c.latlng?.[0]  || 0,
         lon:         lon  || c.latlng?.[1]  || 0,
         timezone:    overrides.timezone     || c.timezones?.[0] || "UTC",
-        currency:    overrides.currency     || Object.keys(c.currencies || {})[0] || "USD",
+        currency:    overrides.currency     || Object.keys(c.currencies || {})[0] || "INR",
         region:      c.region,
       });
     } catch (err) { console.error("Country select error:", err); }
-    finally { setLoading(false); }
   }, []);
 
   if (loading) return (
