@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect, useRef } from "react";
 
 const QUICK_PHRASES = [
@@ -26,7 +27,7 @@ export default function TranslatorPanel({ location, country }) {
   const debounceRef = useRef(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/translate/languages")
+    fetch(`${API}/translate/languages`)
       .then(r => r.json())
       .then(setLanguages)
       .catch(() => {});
@@ -49,7 +50,7 @@ export default function TranslatorPanel({ location, country }) {
     if (!inputText.trim() || inputText.length > 500) return;
     setLoading(true); setError(null);
     try {
-      const r = await fetch("http://localhost:5000/api/translate", {
+      const r = await fetch(`${API}/translate`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ text: inputText, from: fromLang, to: toLang }),
