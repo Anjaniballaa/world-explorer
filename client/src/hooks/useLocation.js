@@ -1,12 +1,101 @@
-// Client-side location detection — runs in BROWSER, always gets user's real IP
+// Location detection — GPS first, IP fallback
 
 export async function detectLocation() {
 
-  // Option 1: ip-api.com via HTTPS proxy (most accurate, city-level)
+  // Step 1: Try browser GPS (most accurate — exact city level)
+  const gpsLocation = await getGPSLocation();
+  if (gpsLocation) {
+    console.log("✅ Got GPS location:", gpsLocation);
+    return gpsLocation;
+  }
+
+  // Step 2: Fallback to IP-based detection
+  console.warn("GPS unavailable, falling back to IP detection");
+  return await getIPLocation();
+}
+
+// ── GPS via browser navigator.geolocation ─────────────────────
+function getGPSLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude: lat, longitude: lon } = position.coords;
+        try {
+          // Reverse geocode with Nominatim to get city/country from GPS coords
+          const res  = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=en`,
+            { headers: { "User-Agent": "WorldExplorerApp/1.0" } }
+          );
+          const data = await res.json();
+          const addr = data.address || {};
+
+          const city    = addr.city || addr.town || addr.village || addr.suburb || addr.municipality || "";
+          const country = addr.country || "";
+          const cc      = addr.country_code?.toLowerCase() || "";
+          const state   = addr.state || addr.state_district || addr.region || "";
+
+          // Get currency from RestCountries
+          let currency = "USD";
+          let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          try {
+            const cr   = await fetch(`https://restcountries.com/v3.1/alpha/${cc.toUpperCase()}?fields=currencies,timezones`);
+            const crData = await cr.json();
+            currency   = Object.keys(crData.currencies || {})[0] || "USD";
+            timezone   = crData.timezones?.[0] || timezone;
+          } catch {}
+
+          resolve({
+            city,
+            country,
+            countryCode: cc,
+            regionName:  state,
+            lat,
+            lon,
+            timezone,
+            currency,
+            source: "gps",
+          });
+        } catch (err) {
+          console.warn("Nominatim reverse failed:", err.message);
+          // Still return GPS coords even without city name
+          resolve({
+            city:        "",
+            country:     "",
+            countryCode: "",
+            regionName:  "",
+            lat,
+            lon,
+            timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone,
+            currency:    "USD",
+            source:      "gps-coords-only",
+          });
+        }
+      },
+      (err) => {
+        console.warn("GPS denied/failed:", err.message);
+        resolve(null); // user denied — fall back to IP
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  });
+}
+
+// ── IP-based fallback ──────────────────────────────────────────
+async function getIPLocation() {
+
+  // Try ipapi.co
   try {
     const res  = await fetch("https://ipapi.co/json/");
     const data = await res.json();
-    console.log("ipapi.co response:", data);
     if (data?.country_name && data?.latitude && !data?.error) {
       return {
         city:        data.city        || data.country_name,
@@ -17,16 +106,16 @@ export async function detectLocation() {
         lon:         data.longitude,
         timezone:    data.timezone,
         currency:    data.currency,
+        source:      "ip-ipapi",
       };
     }
-  } catch (e) { console.warn("ipapi.co failed:", e.message); }
+  } catch {}
 
-  // Option 2: ipwho.is
+  // Try ipwho.is
   try {
     const res  = await fetch("https://ipwho.is/");
     const data = await res.json();
-    console.log("ipwho.is response:", data);
-    if (data?.success && data?.country && data?.latitude) {
+    if (data?.success && data?.latitude) {
       return {
         city:        data.city     || data.country,
         country:     data.country,
@@ -36,35 +125,15 @@ export async function detectLocation() {
         lon:         data.longitude,
         timezone:    data.timezone?.id,
         currency:    data.currency?.code,
+        source:      "ip-ipwho",
       };
     }
-  } catch (e) { console.warn("ipwho.is failed:", e.message); }
+  } catch {}
 
-  // Option 3: ipinfo.io (reliable, HTTPS, city-level)
-  try {
-    const res  = await fetch("https://ipinfo.io/json");
-    const data = await res.json();
-    console.log("ipinfo.io response:", data);
-    if (data?.country && data?.loc) {
-      const [lat, lon] = data.loc.split(",").map(Number);
-      return {
-        city:        data.city    || data.country,
-        country:     data.country, // returns country code like "IN"
-        countryCode: data.country?.toLowerCase(),
-        regionName:  data.region,
-        lat,
-        lon,
-        timezone:    data.timezone,
-        currency:    null, // ipinfo doesn't return currency
-      };
-    }
-  } catch (e) { console.warn("ipinfo.io failed:", e.message); }
-
-  // Option 4: freeipapi.com
+  // Try freeipapi
   try {
     const res  = await fetch("https://freeipapi.com/api/json");
     const data = await res.json();
-    console.log("freeipapi response:", data);
     if (data?.countryName && data?.latitude) {
       return {
         city:        data.cityName  || data.countryName,
@@ -75,12 +144,12 @@ export async function detectLocation() {
         lon:         data.longitude,
         timezone:    data.timeZone,
         currency:    data.currency?.code || "USD",
+        source:      "ip-freeipapi",
       };
     }
-  } catch (e) { console.warn("freeipapi failed:", e.message); }
+  } catch {}
 
-  // Final fallback
-  console.warn("All location APIs failed — using fallback");
+  // Final hardcoded fallback
   return {
     city:        "New Delhi",
     country:     "India",
@@ -90,5 +159,6 @@ export async function detectLocation() {
     lon:         77.2090,
     timezone:    "Asia/Kolkata",
     currency:    "INR",
+    source:      "fallback",
   };
 }
