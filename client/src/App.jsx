@@ -19,7 +19,7 @@ import AttractionsPanel  from "./components/AttractionsPanel";
 import TranslatorPanel   from "./components/TranslatorPanel";
 import "./App.css";
 
-const API = "http://localhost:5000/api";
+const API = "https://world-explorer-api.onrender.com/api";
 
 export default function App() {
   const [location,   setLocation]  = useState(null);
