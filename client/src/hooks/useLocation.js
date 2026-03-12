@@ -1,13 +1,13 @@
-// Client-side location detection
-// Called directly from browser = always gets USER's real IP, never server IP
+// Client-side location detection — runs in BROWSER, always gets user's real IP
 
 export async function detectLocation() {
 
-  // Option 1: ipapi.co (HTTPS, free, reliable)
+  // Option 1: ip-api.com via HTTPS proxy (most accurate, city-level)
   try {
     const res  = await fetch("https://ipapi.co/json/");
     const data = await res.json();
-    if (data?.country_name && data?.latitude) {
+    console.log("ipapi.co response:", data);
+    if (data?.country_name && data?.latitude && !data?.error) {
       return {
         city:        data.city        || data.country_name,
         country:     data.country_name,
@@ -19,15 +19,16 @@ export async function detectLocation() {
         currency:    data.currency,
       };
     }
-  } catch {}
+  } catch (e) { console.warn("ipapi.co failed:", e.message); }
 
-  // Option 2: ipwho.is (HTTPS, no key needed)
+  // Option 2: ipwho.is
   try {
     const res  = await fetch("https://ipwho.is/");
     const data = await res.json();
-    if (data?.success && data?.country) {
+    console.log("ipwho.is response:", data);
+    if (data?.success && data?.country && data?.latitude) {
       return {
-        city:        data.city        || data.country,
+        city:        data.city     || data.country,
         country:     data.country,
         countryCode: data.country_code?.toLowerCase(),
         regionName:  data.region,
@@ -37,15 +38,36 @@ export async function detectLocation() {
         currency:    data.currency?.code,
       };
     }
-  } catch {}
+  } catch (e) { console.warn("ipwho.is failed:", e.message); }
 
-  // Option 3: freeipapi.com (HTTPS)
+  // Option 3: ipinfo.io (reliable, HTTPS, city-level)
+  try {
+    const res  = await fetch("https://ipinfo.io/json");
+    const data = await res.json();
+    console.log("ipinfo.io response:", data);
+    if (data?.country && data?.loc) {
+      const [lat, lon] = data.loc.split(",").map(Number);
+      return {
+        city:        data.city    || data.country,
+        country:     data.country, // returns country code like "IN"
+        countryCode: data.country?.toLowerCase(),
+        regionName:  data.region,
+        lat,
+        lon,
+        timezone:    data.timezone,
+        currency:    null, // ipinfo doesn't return currency
+      };
+    }
+  } catch (e) { console.warn("ipinfo.io failed:", e.message); }
+
+  // Option 4: freeipapi.com
   try {
     const res  = await fetch("https://freeipapi.com/api/json");
     const data = await res.json();
-    if (data?.countryName) {
+    console.log("freeipapi response:", data);
+    if (data?.countryName && data?.latitude) {
       return {
-        city:        data.cityName     || data.countryName,
+        city:        data.cityName  || data.countryName,
         country:     data.countryName,
         countryCode: data.countryCode?.toLowerCase(),
         regionName:  data.regionName,
@@ -55,9 +77,10 @@ export async function detectLocation() {
         currency:    data.currency?.code || "USD",
       };
     }
-  } catch {}
+  } catch (e) { console.warn("freeipapi failed:", e.message); }
 
-  // Final fallback — default to India
+  // Final fallback
+  console.warn("All location APIs failed — using fallback");
   return {
     city:        "New Delhi",
     country:     "India",
