@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import API from "./config";
 import Header            from "./components/Header";
 import InteractiveMap    from "./components/InteractiveMap";
 import CountryCard       from "./components/CountryCard";
@@ -19,8 +20,6 @@ import AttractionsPanel  from "./components/AttractionsPanel";
 import TranslatorPanel   from "./components/TranslatorPanel";
 import "./App.css";
 
-const API = "https://world-explorer-api.onrender.com/api";
-
 export default function App() {
   const [location,   setLocation]  = useState(null);
   const [country,    setCountry]   = useState(null);
@@ -34,64 +33,28 @@ export default function App() {
       if (data?.[0]) setCountry(data[0]);
     } catch (err) { console.error("Country error:", err); }
   }, []);
-useEffect(() => {
-  const detect = async () => {
-    try {
 
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-
-          const res = await fetch(`${API}/location?lat=${lat}&lon=${lon}`);
-          const data = await res.json();
-
-          setLocation({
-            city: data.city,
-            country: data.country,
-            countryCode: data.countryCode?.toLowerCase(),
-            lat: lat,
-            lon: lon,
-            timezone: data.timezone,
-            currency: data.currency,
-            region: data.regionName,
-          });
-
-          await fetchCountry(data.country);
-          setLoading(false);
-        },
-
-        async () => {
-          // fallback if user blocks location
-          const res = await fetch(`${API}/location`);
-          const data = await res.json();
-
-          setLocation({
-            city: data.city,
-            country: data.country,
-            countryCode: data.countryCode?.toLowerCase(),
-            lat: data.lat,
-            lon: data.lon,
-            timezone: data.timezone,
-            currency: data.currency,
-            region: data.regionName,
-          });
-
-          await fetchCountry(data.country);
-          setLoading(false);
-        }
-
-      );
-
-    } catch (err) {
-      console.error("Location error:", err);
-      setLoading(false);
-    }
-  };
-
-  detect();
-}, [fetchCountry]);
+  useEffect(() => {
+    const detect = async () => {
+      try {
+        const res  = await fetch(`${API}/location`);
+        const data = await res.json();
+        setLocation({
+          city:        data.city,
+          country:     data.country,
+          countryCode: data.countryCode?.toLowerCase(),
+          lat:         data.lat,
+          lon:         data.lon,
+          timezone:    data.timezone,
+          currency:    data.currency,
+          region:      data.regionName,
+        });
+        await fetchCountry(data.country);
+      } catch (err) { console.error("Location error:", err); }
+      finally { setLoading(false); }
+    };
+    detect();
+  }, [fetchCountry]);
 
   const handleCountrySelect = useCallback(async (countryName, lat, lon, overrides = {}) => {
     setLoading(true);
