@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 const CATEGORIES = ["general", "technology", "sports", "health", "business", "entertainment", "science"];
@@ -12,7 +13,7 @@ export default function NewsPanel({ countryCode, country }) {
   useEffect(() => {
     setLoading(true);
     setArticles([]);
-    fetch(`http://localhost:5000/api/news?country=${cc}&category=${category}&countryName=${encodeURIComponent(country || "World")}`)
+    fetch(`${API}/news?country=${cc}&category=${category}&countryName=${encodeURIComponent(country || "World")}`)
       .then(r => r.json())
       .then(d => { setArticles(d.articles || []); setLoading(false); })
       .catch(() => setLoading(false));
