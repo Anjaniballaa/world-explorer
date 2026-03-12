@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 function getAQILabel(aqi) {
@@ -16,7 +17,7 @@ export default function AirQualityPanel({ lat, lon, city }) {
   useEffect(() => {
     if (!lat || !lon) return;
     setLoading(true);
-    fetch(`http://localhost:5000/api/airquality?lat=${lat}&lon=${lon}`)
+    fetch(`${API}/airquality?lat=${lat}&lon=${lon}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
