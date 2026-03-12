@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 const fmt = (val, type) => {
@@ -84,7 +85,7 @@ export default function EconomyPanel({ location, country }) {
   useEffect(() => {
     if (!cc) return;
     setLoading(true); setError(false); setData(null);
-    fetch(`http://localhost:5000/api/economy?countryCode=${cc}`)
+    fetch(`${API}/economy?countryCode=${cc}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
