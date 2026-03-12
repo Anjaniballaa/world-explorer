@@ -92,6 +92,9 @@ export default function App() {
     <div className="loader-screen">
       <div className="globe-spinner">🌍</div>
       <p>Detecting your location...</p>
+      <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: -12, letterSpacing: 1 }}>
+        Allow location access for exact results
+      </p>
     </div>
   );
 
