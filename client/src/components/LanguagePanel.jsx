@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 // India has 22 scheduled languages - only show primary regional one as "official for region"
@@ -26,7 +27,7 @@ export default function LanguagePanel({ location, country }) {
     setError(false);
     setData(null);
 
-    fetch(`http://localhost:5000/api/language?lat=${location.lat}&lon=${location.lon}&city=${encodeURIComponent(location.city || "")}&country=${encodeURIComponent(location.country || "")}`)
+    fetch(`${API}/language?lat=${location.lat}&lon=${location.lon}&city=${encodeURIComponent(location.city || "")}&country=${encodeURIComponent(location.country || "")}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
