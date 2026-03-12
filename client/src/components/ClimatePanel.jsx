@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 const BAR_COLORS = {
@@ -63,7 +64,7 @@ export default function ClimatePanel({ location }) {
   useEffect(() => {
     if (!location?.lat || !location?.lon) return;
     setLoading(true); setError(false); setData(null);
-    fetch(`http://localhost:5000/api/climate?lat=${location.lat}&lon=${location.lon}&city=${encodeURIComponent(location.city || "")}`)
+    fetch(`${API}/climate?lat=${location.lat}&lon=${location.lon}&city=${encodeURIComponent(location.city || "")}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
