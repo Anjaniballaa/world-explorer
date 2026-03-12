@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 export default function WikiPanel({ query, cityQuery }) {
@@ -6,7 +7,7 @@ export default function WikiPanel({ query, cityQuery }) {
 
   useEffect(() => {
     if (!query) return;
-    fetch(`http://localhost:5000/api/wiki?query=${encodeURIComponent(query)}`)
+    fetch(`${API}/wiki?query=${encodeURIComponent(query)}`)
       .then(r => r.json())
       .then(d => setCountryData(d))
       .catch(() => {});
@@ -14,7 +15,7 @@ export default function WikiPanel({ query, cityQuery }) {
 
   useEffect(() => {
     if (!cityQuery) return;
-    fetch(`http://localhost:5000/api/wiki?query=${encodeURIComponent(cityQuery)}`)
+    fetch(`${API}/wiki?query=${encodeURIComponent(cityQuery)}`)
       .then(r => r.json())
       .then(d => setCityData(d))
       .catch(() => {});
