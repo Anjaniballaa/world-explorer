@@ -2,54 +2,6 @@ const express = require("express");
 const axios   = require("axios");
 const router  = express.Router();
 
-// State lookup by city for India — covers major cities
-const INDIA_CITY_TO_STATE = {
-  // Andhra Pradesh
-  "Bhimavaram": "Andhra Pradesh", "Visakhapatnam": "Andhra Pradesh", "Vijayawada": "Andhra Pradesh",
-  "Guntur": "Andhra Pradesh", "Nellore": "Andhra Pradesh", "Kurnool": "Andhra Pradesh",
-  "Rajahmundry": "Andhra Pradesh", "Tirupati": "Andhra Pradesh", "Kakinada": "Andhra Pradesh",
-  "Eluru": "Andhra Pradesh", "Ongole": "Andhra Pradesh", "Anantapur": "Andhra Pradesh",
-  "Vizianagaram": "Andhra Pradesh", "Chittoor": "Andhra Pradesh", "Amaravati": "Andhra Pradesh",
-  // Telangana
-  "Hyderabad": "Telangana", "Warangal": "Telangana", "Nizamabad": "Telangana",
-  "Karimnagar": "Telangana", "Khammam": "Telangana", "Secunderabad": "Telangana",
-  // Karnataka
-  "Bangalore": "Karnataka", "Bengaluru": "Karnataka", "Mysore": "Karnataka", "Mysuru": "Karnataka",
-  "Hubli": "Karnataka", "Mangalore": "Karnataka", "Belgaum": "Karnataka", "Tumkur": "Karnataka",
-  // Tamil Nadu
-  "Chennai": "Tamil Nadu", "Coimbatore": "Tamil Nadu", "Madurai": "Tamil Nadu",
-  "Salem": "Tamil Nadu", "Tiruchirappalli": "Tamil Nadu", "Tirunelveli": "Tamil Nadu",
-  // Kerala
-  "Thiruvananthapuram": "Kerala", "Kochi": "Kerala", "Kozhikode": "Kerala",
-  "Thrissur": "Kerala", "Kollam": "Kerala", "Kannur": "Kerala",
-  // Maharashtra
-  "Mumbai": "Maharashtra", "Pune": "Maharashtra", "Nagpur": "Maharashtra",
-  "Nashik": "Maharashtra", "Aurangabad": "Maharashtra", "Solapur": "Maharashtra",
-  // Gujarat
-  "Ahmedabad": "Gujarat", "Surat": "Gujarat", "Vadodara": "Gujarat",
-  "Rajkot": "Gujarat", "Bhavnagar": "Gujarat", "Jamnagar": "Gujarat",
-  // West Bengal
-  "Kolkata": "West Bengal", "Howrah": "West Bengal", "Durgapur": "West Bengal",
-  "Asansol": "West Bengal", "Siliguri": "West Bengal",
-  // Delhi
-  "New Delhi": "Delhi", "Delhi": "Delhi",
-  // Uttar Pradesh
-  "Lucknow": "Uttar Pradesh", "Kanpur": "Uttar Pradesh", "Agra": "Uttar Pradesh",
-  "Varanasi": "Uttar Pradesh", "Allahabad": "Uttar Pradesh", "Prayagraj": "Uttar Pradesh",
-  // Rajasthan
-  "Jaipur": "Rajasthan", "Jodhpur": "Rajasthan", "Udaipur": "Rajasthan", "Kota": "Rajasthan",
-  // Punjab
-  "Chandigarh": "Punjab", "Ludhiana": "Punjab", "Amritsar": "Punjab", "Jalandhar": "Punjab",
-  // Bihar
-  "Patna": "Bihar", "Gaya": "Bihar", "Muzaffarpur": "Bihar",
-  // Odisha
-  "Bhubaneswar": "Odisha", "Cuttack": "Odisha", "Rourkela": "Odisha",
-  // Assam
-  "Guwahati": "Assam", "Dibrugarh": "Assam", "Jorhat": "Assam",
-  // Madhya Pradesh
-  "Bhopal": "Madhya Pradesh", "Indore": "Madhya Pradesh", "Gwalior": "Madhya Pradesh", "Jabalpur": "Madhya Pradesh",
-};
-
 const INDIA_REGIONAL = {
   "Andhra Pradesh": "Telugu", "Telangana": "Telugu",
   "Tamil Nadu": "Tamil", "Karnataka": "Kannada",
@@ -70,26 +22,40 @@ router.get("/", async (req, res) => {
   if (!lat || !lon) return res.status(400).json({ error: "lat and lon required" });
 
   try {
-    // Step 1: Nominatim reverse geocode
-    const nominatimRes = await axios.get(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=en`,
-      { headers: { "User-Agent": "WorldExplorerApp/1.0" }, timeout: 8000 }
-    );
-    const address     = nominatimRes.data?.address || {};
-    const countryCode = address.country_code?.toUpperCase() || "";
+    // Step 1: Nominatim reverse geocode with zoom levels
+    // zoom=10 gives district/city level, zoom=5 gives state level
+    const [reverseRes, stateRes] = await Promise.all([
+      axios.get(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=en&zoom=10`,
+        { headers: { "User-Agent": "WorldExplorerApp/1.0" }, timeout: 8000 }
+      ),
+      axios.get(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=en&zoom=5`,
+        { headers: { "User-Agent": "WorldExplorerApp/1.0" }, timeout: 8000 }
+      )
+    ]);
+
+    const address      = reverseRes.data?.address || {};
+    const stateAddress = stateRes.data?.address   || {};
+    const countryCode  = address.country_code?.toUpperCase() || "";
     const detectedCity = address.city || address.town || address.village ||
                          address.suburb || address.municipality || city || "";
 
-    // Step 2: Get state — try Nominatim first, then city lookup, then Wikipedia scan
-    let state = address.state || address.state_district || address.region || address.county || "";
+    // zoom=5 gives cleaner state name
+    let state = stateAddress.state || stateAddress.region ||
+                address.state      || address.state_district ||
+                address.region     || address.county || "";
 
-    // For India: use city→state lookup map if Nominatim missed the state
-    if ((countryCode === "IN" || country === "India") && !state) {
-      const cityKey = Object.keys(INDIA_CITY_TO_STATE).find(k =>
-        (detectedCity || city || "").toLowerCase().includes(k.toLowerCase()) ||
-        k.toLowerCase().includes((detectedCity || city || "").toLowerCase())
-      );
-      if (cityKey) state = INDIA_CITY_TO_STATE[cityKey];
+    // Step 2: If state still missing — use Nominatim search with city name
+    if (!state && (detectedCity || city)) {
+      try {
+        const searchRes = await axios.get(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent((detectedCity || city) + ", " + (address.country || country || ""))}&format=json&addressdetails=1&limit=1`,
+          { headers: { "User-Agent": "WorldExplorerApp/1.0" }, timeout: 6000 }
+        );
+        const a = searchRes.data?.[0]?.address || {};
+        state = a.state || a.state_district || a.region || a.county || "";
+      } catch {}
     }
 
     // Step 3: Official languages from RestCountries
@@ -99,17 +65,19 @@ router.get("/", async (req, res) => {
         `https://restcountries.com/v3.1/alpha/${countryCode}?fields=languages`,
         { timeout: 5000 }
       );
-      officialLanguages = Object.entries(countryRes.data?.languages || {}).map(([code, name]) => ({ code, name }));
+      officialLanguages = Object.entries(countryRes.data?.languages || {})
+        .map(([code, name]) => ({ code, name }));
     } catch {}
 
-    // Step 4: Primary language — for India use state map
+    // Step 4: Primary language
+    // For India use state→language map (this is still a lookup but based on LIVE detected state)
     let primaryLang = null;
     if (countryCode === "IN" && state) {
       primaryLang = INDIA_REGIONAL[state] || null;
     }
 
-    // Step 5: City Wikipedia
-    let cityWiki    = null;
+    // Step 5: City Wikipedia — extract language mentions and also state if missing
+    let cityWiki     = null;
     let regionalLang = null;
     const citySearchTerm = detectedCity || city;
 
@@ -127,15 +95,15 @@ router.get("/", async (req, res) => {
           thumbnail: cityWikiRes.data.thumbnail?.source,
         };
 
-        // If state still missing — scan Wikipedia text for state names
+        // Extract state from Wikipedia text if still missing
         if (!state && countryCode === "IN") {
           for (const s of Object.keys(INDIA_REGIONAL)) {
             if (extract.includes(s)) { state = s; break; }
           }
-          // Also update primaryLang after finding state from Wikipedia
           if (state && !primaryLang) primaryLang = INDIA_REGIONAL[state];
         }
 
+        // Extract language mentions from Wikipedia
         const langPattern = /(Telugu|Hindi|Tamil|Kannada|Malayalam|Bengali|Marathi|Gujarati|Punjabi|Urdu|Odia|Assamese|Konkani|Arabic|French|German|Spanish|Portuguese|Russian|Chinese|Japanese|Korean|Italian|Dutch|Turkish|Swahili|English)/gi;
         const matches = [...new Set(extract.match(langPattern) || [])];
         if (matches.length > 0) {
@@ -170,10 +138,10 @@ router.get("/", async (req, res) => {
       } catch {}
     }
 
-    // Final fallback
+    // Final fallback for primary language
     if (!primaryLang) primaryLang = officialLanguages[0]?.name || "Unknown";
 
-    // Step 7: Native script
+    // Step 7: Native script for city name
     let nativeScript = null;
     const nativeLangCodes = {
       "Telugu": "te", "Hindi": "hi", "Tamil": "ta", "Kannada": "kn",
