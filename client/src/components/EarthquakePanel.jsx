@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 export default function EarthquakePanel({ lat, lon }) {
@@ -7,7 +8,7 @@ export default function EarthquakePanel({ lat, lon }) {
   useEffect(() => {
     if (!lat || !lon) return;
     setLoading(true);
-    fetch(`http://localhost:5000/api/earthquake?lat=${lat}&lon=${lon}`)
+    fetch(`${API}/earthquake?lat=${lat}&lon=${lon}`)
       .then(r => r.json())
       .then(d => { setQuakes(d.features || []); setLoading(false); })
       .catch(() => setLoading(false));
