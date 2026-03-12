@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 export default function NasaPanel({ location }) {
@@ -6,7 +7,7 @@ export default function NasaPanel({ location }) {
   const [issHistory, setIssHistory] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/nasa")
+    fetch(`${API}/nasa`)
       .then(r => r.json())
       .then(d => setApod(d))
       .catch(() => {});
@@ -14,7 +15,7 @@ export default function NasaPanel({ location }) {
 
   useEffect(() => {
     const fetchISS = () => {
-      fetch("http://localhost:5000/api/iss")
+      fetch(`${API}/iss`)
         .then(r => r.json())
         .then(d => {
           setIss(d);
