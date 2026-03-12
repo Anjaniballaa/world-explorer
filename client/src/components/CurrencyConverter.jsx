@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 export default function CurrencyConverter({ baseCurrency }) {
@@ -9,7 +10,7 @@ export default function CurrencyConverter({ baseCurrency }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/currency/currencies")
+    fetch(`${API}/currency/currencies`)
       .then(r => r.json())
       .then(d => setCurrencies(d))
       .catch(() => {});
@@ -22,7 +23,7 @@ export default function CurrencyConverter({ baseCurrency }) {
   const convert = () => {
     if (!from || !to || !amount) return;
     setLoading(true);
-    fetch(`http://localhost:5000/api/currency?from=${from}&to=${to}&amount=${amount}`)
+    fetch(`${API}/currency?from=${from}&to=${to}&amount=${amount}`)
       .then(r => r.json())
       .then(d => { setResult(d); setLoading(false); })
       .catch(() => setLoading(false));
