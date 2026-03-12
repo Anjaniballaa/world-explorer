@@ -1,3 +1,4 @@
+import API from "../config";
 import { useState, useEffect } from "react";
 
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -94,7 +95,7 @@ export default function HolidaysPanel({ location, country }) {
   useEffect(() => {
     if (!cc) return;
     setLoading(true); setError(null); setData(null);
-    fetch(`http://localhost:5000/api/holidays?countryCode=${cc}`)
+    fetch(`${API}/holidays?countryCode=${cc}`)
       .then(r => r.json())
       .then(d => {
         if (d.error) { setError(d.hint || d.error); setLoading(false); return; }
