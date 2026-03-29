@@ -49,39 +49,7 @@ Point it at any country or city. Watch the data pour in.
 ## 🔌 APIs & Endpoints
 
 > This project was built **primarily to learn how APIs work** — how to call them, handle their responses, chain them together, and build real products with them.
-```
 ---
- 
-## 🏗️ Architecture
- 
-```
-┌─────────────────────────────────────────┐
-│           VERCEL (Frontend)              │
-│   React + Vite                           │
-│   13 Panels → each calls Render API      │
-│   GPS → exact location detection         │
-└──────────────┬──────────────────────────┘
-               │ HTTPS API calls
-               ▼
-┌─────────────────────────────────────────┐
-│           RENDER (Backend)               │
-│   Express.js API Server                  │
-│   17 routes → each calls external APIs  │
-│   Hides API keys from frontend           │
-└──────────────┬──────────────────────────┘
-               │ calls 15+ external APIs
-               ▼
-┌─────────────────────────────────────────┐
-│         EXTERNAL APIs                    │
-│  OpenWeatherMap · NASA · USGS            │
-│  World Bank · Geoapify · Calendarific    │
-│  Wikipedia · Nominatim · Frankfurter     │
-│  Open-Meteo · TheNewsAPI · ipapi.co      │
-└─────────────────────────────────────────┘
-```
- 
----
-
 
 ## 🛠️ Tech Stack
 
