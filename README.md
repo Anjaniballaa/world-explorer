@@ -50,39 +50,7 @@ Point it at any country or city. Watch the data pour in.
 
 > This project was built **primarily to learn how APIs work** — how to call them, handle their responses, chain them together, and build real products with them.
 
-### Backend Routes (Express.js on Render)
-
 ```
-GET /api/location       → IP geolocation (ip-api.com)
-GET /api/weather        → OpenWeatherMap current weather
-GET /api/airquality     → Open-Meteo air quality
-GET /api/marine         → Open-Meteo marine wave data
-GET /api/earthquake     → USGS real-time earthquake feed
-GET /api/climate        → Open-Meteo historical archive
-GET /api/attractions    → Geoapify places of interest
-GET /api/economy        → World Bank development indicators
-GET /api/holidays       → Calendarific public holidays
-GET /api/language       → Nominatim + Wikipedia + RestCountries
-GET /api/translate      → LibreTranslate
-GET /api/news           → TheNewsAPI headlines
-GET /api/currency       → Frankfurter exchange rates
-GET /api/nasa           → NASA APOD
-GET /api/iss            → wheretheiss.at live ISS position
-GET /api/wiki           → Wikipedia REST summary
-GET /api/time           → WorldTime API
-```
-
-### Frontend Direct Calls (No Backend Needed)
-
-```
-https://restcountries.com        → Country metadata
-https://nominatim.openstreetmap.org → Reverse geocoding
-https://ipapi.co/json            → Browser-side IP detection
-https://ipwho.is                 → IP fallback
-```
-
----
-
 ## 🏗️ Architecture
 
 ```
@@ -205,32 +173,6 @@ This project was built specifically to understand **how APIs and endpoints work*
 - **Async/await patterns** — handling multiple concurrent API calls
 - **IP geolocation vs GPS** — understanding accuracy tradeoffs
 - **Deployment** — connecting Vercel frontend to Render backend in production
-
----
-
-## 📁 Project Structure
-
-```
-world-explorer/
-├── client/                    # React frontend
-│   ├── src/
-│   │   ├── components/        # 17 panel components
-│   │   ├── hooks/
-│   │   │   └── useLocation.js # GPS + IP location detection
-│   │   ├── config.js          # API URL switcher (dev/prod)
-│   │   ├── App.jsx            # Root + tab routing
-│   │   └── App.css            # Dark theme design system
-│   └── vite.config.js
-│
-└── server/                    # Express backend
-    ├── routes/                # 17 API route files
-    │   ├── location.js
-    │   ├── weather.js
-    │   ├── language.js
-    │   └── ... (14 more)
-    ├── index.js               # Express app entry
-    └── .env                   # API keys (never committed)
-```
 
 ---
 
