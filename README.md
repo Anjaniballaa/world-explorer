@@ -49,12 +49,11 @@ Point it at any country or city. Watch the data pour in.
 ## 🔌 APIs & Endpoints
 
 > This project was built **primarily to learn how APIs work** — how to call them, handle their responses, chain them together, and build real products with them.
-
 ```
 ---
-
+ 
 ## 🏗️ Architecture
-
+ 
 ```
 ┌─────────────────────────────────────────┐
 │           VERCEL (Frontend)              │
@@ -80,8 +79,9 @@ Point it at any country or city. Watch the data pour in.
 │  Open-Meteo · TheNewsAPI · ipapi.co      │
 └─────────────────────────────────────────┘
 ```
-
+ 
 ---
+
 
 ## 🛠️ Tech Stack
 
