@@ -12,7 +12,7 @@ export default function Header({ location, onSearch }) {
 
     try {
       // Step 1: Try as a country name first
-      const countryRes = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(query.trim())}`);
+      const countryRes = await fetch(`/api/countries?path=name/${encodeURIComponent(query.trim())}`);
       const countryData = await countryRes.json();
 
       if (countryData && countryData[0] && !countryData.status) {
