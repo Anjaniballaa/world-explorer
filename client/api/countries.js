@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
-  const { path = 'all', fields } = req.query;
-  const query = fields ? `?fields=${fields}` : '';
-  const upstream = `https://restcountries.com/v3.1/${path}${query}`;
+  const { path = 'all', ...rest } = req.query;
+  const params = new URLSearchParams(rest).toString();
+  const upstream = `https://restcountries.com/v3.1/${path}${params ? `?${params}` : ''}`;
 
   try {
     const upstreamRes = await fetch(upstream);
