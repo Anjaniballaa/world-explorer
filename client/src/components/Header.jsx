@@ -43,26 +43,27 @@ export default function Header({ location, onSearch }) {
                         place.address?.state || place.display_name?.split(",")[0];
 
         // Now get full country data for that location
-        const countryRes2 = await fetch(`/api/countries?path=name/${encodeURIComponent(countryName)}&fullText=true`);
-        const countryData2 = await countryRes2.json();
+        // Now get full country data for that location
+const countryRes2 = await fetch(`/api/countries?path=names.common/${encodeURIComponent(countryName)}`);
+const j2 = await countryRes2.json();
+const countryData2 = j2?.data?.objects || [];
 
-        if (countryData2 && countryData2[0]) {
-          const c = countryData2[0];
-          const currencies = Object.keys(c.currencies || {})[0] || "USD";
-          const ccCode = c.cca2?.toLowerCase() || "us";
+if (countryData2[0]) {
+  const c = countryData2[0];
+  const currencies = Object.keys(c.currencies || {})[0] || "USD";
+  const ccCode = c.codes?.alpha_2?.toLowerCase() || "us";
 
-          // Pass city-level lat/lon but country info
-          await onSearch(c.name.common, lat, lon, {
-            city: cityName,
-            countryCode: ccCode,
-            currency: currencies,
-            timezone: c.timezones?.[0] || "UTC",
-            overrideCity: cityName, // force city name to searched city
-          });
-          setQuery("");
-          setSearching(false);
-          return;
-        }
+  await onSearch(c.names.common, lat, lon, {
+    city: cityName,
+    countryCode: ccCode,
+    currency: currencies,
+    timezone: c.timezones?.[0] || "UTC",
+    overrideCity: cityName,
+  });
+  setQuery("");
+  setSearching(false);
+  return;
+}
       }
     } catch {}
 
