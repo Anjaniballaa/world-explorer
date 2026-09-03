@@ -28,12 +28,13 @@ export default function App() {
   const [activeTab,  setActiveTab] = useState("overview");
 
   const fetchCountry = useCallback(async (name) => {
-    try {
-      const res  = await fetch(`/api/countries?path=name/${encodeURIComponent(name)}&fullText=true`);
-      const data = await res.json();
-      if (data?.[0]) setCountry(data[0]);
-    } catch (err) { console.error("Country error:", err); }
-  }, []);
+  try {
+    const res  = await fetch(`/api/countries?path=names.common/${encodeURIComponent(name)}`);
+    const j    = await res.json();
+    const data = j?.data?.objects;
+    if (data?.[0]) setCountry(data[0]);
+  } catch (err) { console.error("Country error:", err); }
+}, []);
 
   useEffect(() => {
     const detect = async () => {
