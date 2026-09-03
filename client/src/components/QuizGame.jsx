@@ -13,15 +13,15 @@ export default function QuizGame({ region, country }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/countries?path=all&fields=name,capital,flags,population,region,area")
-      .then(r => r.json())
-      .then(d => {
-        const filtered = d.filter(c => c.capital?.length > 0 && c.name?.common && c.flags?.svg);
-        setAllCountries(filtered);
-        setLoading(false);
-      })
-      .catch(() => { setFetchError(true); setLoading(false); });
-  }, []);
+    fetch("/api/countries?path=&response_fields=names.common,capitals,flag.url_svg,population,region,area.kilometers&limit=100")
+  .then(r => r.json())
+  .then(j => {
+    const d = (j?.data?.objects || []);
+    const filtered = d.filter(c => c.capitals?.length > 0 && c.names?.common && c.flag?.url_svg);
+    setAllCountries(filtered);
+    setLoading(false);
+  })
+  .catch(() => { setFetchError(true); setLoading(false); });
 
   const generateQuestion = useCallback(() => {
     if (allCountries.length < 4) return;
