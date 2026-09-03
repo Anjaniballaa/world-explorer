@@ -41,7 +41,7 @@ export default function Header({ location, onSearch }) {
                         place.address?.state || place.display_name?.split(",")[0];
 
         // Now get full country data for that location
-        const countryRes2 = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=true`);
+        const countryRes2 = await fetch(`/api/countries?path=name/${encodeURIComponent(countryName)}&fullText=true`);
         const countryData2 = await countryRes2.json();
 
         if (countryData2 && countryData2[0]) {
