@@ -9,12 +9,15 @@ export default async function handler(req, res) {
     });
     const data = await upstreamRes.json();
     if (!upstreamRes.ok) {
+      // Never cache error responses
+      res.setHeader('Cache-Control', 'no-store');
       return res.status(upstreamRes.status).json({ error: data?.errors?.[0]?.message || `Upstream returned ${upstreamRes.status}` });
     }
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
     return res.status(200).json(data);
   } catch (err) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(502).json({ error: 'Failed to reach restcountries.com' });
   }
 }
