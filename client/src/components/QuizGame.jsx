@@ -13,7 +13,7 @@ export default function QuizGame({ region, country }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch("https://restcountries.com/v3.1/all?fields=name,capital,flags,population,region,area")
+    fetch("/api/countries?path=all&fields=name,capital,flags,population,region,area")
       .then(r => r.json())
       .then(d => {
         const filtered = d.filter(c => c.capital?.length > 0 && c.name?.common && c.flags?.svg);
