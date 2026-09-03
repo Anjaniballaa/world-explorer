@@ -29,7 +29,7 @@ export default function App() {
 
   const fetchCountry = useCallback(async (name) => {
     try {
-      const res  = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(name)}?fullText=true`);
+      const res  = await fetch(`/api/countries?path=name/${encodeURIComponent(name)}&fullText=true`);
       const data = await res.json();
       if (data?.[0]) setCountry(data[0]);
     } catch (err) { console.error("Country error:", err); }
@@ -59,7 +59,7 @@ export default function App() {
 
   const handleCountrySelect = useCallback(async (countryName, lat, lon, overrides = {}) => {
     try {
-      const res  = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=true`);
+      const res  = await fetch(`/api/countries?path=name/${encodeURIComponent(countryName)}&fullText=true`);
       const data = await res.json();
       const c    = data?.[0];
       if (!c) {
