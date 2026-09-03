@@ -12,16 +12,18 @@ export default function Header({ location, onSearch }) {
 
     try {
       // Step 1: Try as a country name first
-      const countryRes = await fetch(`/api/countries?path=name/${encodeURIComponent(query.trim())}`);
-      const countryData = await countryRes.json();
+      // Step 1: Try as a country name first
+      const countryRes = await fetch(`/api/countries?path=name&q=${encodeURIComponent(query.trim())}&limit=1`);
+      const j = await countryRes.json();
+      const countryData = j?.data?.objects || [];
 
-      if (countryData && countryData[0] && !countryData.status) {
+      if (countryData[0]) {
         const c = countryData[0];
-        await onSearch(c.name.common, c.latlng?.[0] || 0, c.latlng?.[1] || 0);
+        await onSearch(c.names.common, c.coordinates?.lat || 0, c.coordinates?.lng || 0);
         setQuery("");
         setSearching(false);
         return;
-      }
+    }
     } catch {}
 
     try {
