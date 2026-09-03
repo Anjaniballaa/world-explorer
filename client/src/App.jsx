@@ -59,35 +59,34 @@ export default function App() {
   }, [fetchCountry]);
 
   const handleCountrySelect = useCallback(async (countryName, lat, lon, overrides = {}) => {
-    try {
-      const res  = await fetch(`/api/countries?path=name/${encodeURIComponent(countryName)}&fullText=true`);
-      const data = await res.json();
-      const c    = data?.[0];
-      if (!c) {
-        // Even if country lookup fails, still update location with what we have
-        if (lat && lon) {
-          setLocation(prev => ({
-            ...prev,
-            city:    overrides.overrideCity || countryName,
-            country: countryName,
-            lat, lon,
-          }));
-        }
-        return;
+  try {
+    const res  = await fetch(`/api/countries?path=names.common/${encodeURIComponent(countryName)}`);
+    const j    = await res.json();
+    const c    = j?.data?.objects?.[0];
+    if (!c) {
+      if (lat && lon) {
+        setLocation(prev => ({
+          ...prev,
+          city:    overrides.overrideCity || countryName,
+          country: countryName,
+          lat, lon,
+        }));
       }
-      setCountry(c);
-      setLocation({
-        city:        overrides.overrideCity || c.capital?.[0] || countryName,
-        country:     c.name.common,
-        countryCode: overrides.countryCode  || c.cca2?.toLowerCase() || "in",
-        lat:         lat  || c.latlng?.[0]  || 0,
-        lon:         lon  || c.latlng?.[1]  || 0,
-        timezone:    overrides.timezone     || c.timezones?.[0] || "UTC",
-        currency:    overrides.currency     || Object.keys(c.currencies || {})[0] || "INR",
-        region:      c.region,
-      });
-    } catch (err) { console.error("Country select error:", err); }
-  }, []);
+      return;
+    }
+    setCountry(c);
+    setLocation({
+      city:        overrides.overrideCity || c.capitals?.[0]?.name || countryName,
+      country:     c.names.common,
+      countryCode: overrides.countryCode  || c.codes?.alpha_2?.toLowerCase() || "in",
+      lat:         lat  || c.coordinates?.lat || 0,
+      lon:         lon  || c.coordinates?.lng || 0,
+      timezone:    overrides.timezone     || c.timezones?.[0] || "UTC",
+      currency:    overrides.currency     || Object.keys(c.currencies || {})[0] || "INR",
+      region:      c.region,
+    });
+  } catch (err) { console.error("Country select error:", err); }
+}, []);
 
   if (loading) return (
     <div className="loader-screen">
