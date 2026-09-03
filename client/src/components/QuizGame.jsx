@@ -14,14 +14,15 @@ export default function QuizGame({ region, country }) {
   useEffect(() => {
     setLoading(true);
     fetch("/api/countries?path=&response_fields=names.common,capitals,flag.url_svg,population,region,area.kilometers&limit=100")
-  .then(r => r.json())
-  .then(j => {
-    const d = (j?.data?.objects || []);
-    const filtered = d.filter(c => c.capitals?.length > 0 && c.names?.common && c.flag?.url_svg);
-    setAllCountries(filtered);
-    setLoading(false);
-  })
-  .catch(() => { setFetchError(true); setLoading(false); });
+      .then(r => r.json())
+      .then(j => {
+        const d = (j?.data?.objects || []);
+        const filtered = d.filter(c => c.capitals?.length > 0 && c.names?.common && c.flag?.url_svg);
+        setAllCountries(filtered);
+        setLoading(false);
+      })
+      .catch(() => { setFetchError(true); setLoading(false); });
+  }, []);
 
   const generateQuestion = useCallback(() => {
     if (allCountries.length < 4) return;
@@ -40,20 +41,20 @@ export default function QuizGame({ region, country }) {
 
     if (type === 0) {
       // Flag question
-      const opts = [correct, ...wrong].sort(() => Math.random() - 0.5).map(c => c.name.common);
-      setQuestion({ text: "🏳️ Which country does this flag belong to?", flag: correct.flags.svg, answer: correct.name.common });
+      const opts = [correct, ...wrong].sort(() => Math.random() - 0.5).map(c => c.names.common);
+      setQuestion({ text: "🏳️ Which country does this flag belong to?", flag: correct.flag.url_svg, answer: correct.names.common });
       setOptions(opts);
     } else if (type === 1) {
       // Capital question - make sure all have capitals
-      const validWrong = wrong.filter(c => c.capital?.[0]);
+      const validWrong = wrong.filter(c => c.capitals?.[0]?.name);
       if (validWrong.length < 3) { generateQuestion(); return; }
-      const opts = [correct.capital[0], ...validWrong.map(c => c.capital[0])].sort(() => Math.random() - 0.5);
-      setQuestion({ text: `🏙️ What is the capital of ${correct.name.common}?`, flag: null, countryFlag: correct.flags.svg, answer: correct.capital[0] });
+      const opts = [correct.capitals[0].name, ...validWrong.map(c => c.capitals[0].name)].sort(() => Math.random() - 0.5);
+      setQuestion({ text: `🏙️ What is the capital of ${correct.names.common}?`, flag: null, countryFlag: correct.flag.url_svg, answer: correct.capitals[0].name });
       setOptions(opts);
     } else {
       // Population question
-      const opts = [correct, ...wrong].sort(() => Math.random() - 0.5).map(c => c.name.common);
-      setQuestion({ text: `🌍 Which country has ~${(correct.population / 1e6).toFixed(1)}M people?`, flag: null, answer: correct.name.common });
+      const opts = [correct, ...wrong].sort(() => Math.random() - 0.5).map(c => c.names.common);
+      setQuestion({ text: `🌍 Which country has ~${(correct.population / 1e6).toFixed(1)}M people?`, flag: null, answer: correct.names.common });
       setOptions(opts);
     }
   }, [allCountries, mode, region]);
