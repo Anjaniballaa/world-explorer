@@ -43,10 +43,11 @@ function getGPSLocation() {
           let currency = "USD";
           let timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
           try {
-            const cr   = await fetch(`/api/countries?path=alpha/${cc.toUpperCase()}&fields=currencies,timezones`);
+            const cr     = await fetch(`/api/countries?path=codes.alpha_2/${cc.toUpperCase()}&response_fields=currencies,timezones`);
             const crData = await cr.json();
-            currency   = Object.keys(crData.currencies || {})[0] || "USD";
-            timezone   = crData.timezones?.[0] || timezone;
+            const c      = crData?.data?.objects?.[0] || {};
+            currency     = Object.keys(c.currencies || {})[0] || "USD";
+            timezone     = c.timezones?.[0] || timezone;
           } catch {}
 
           resolve({
